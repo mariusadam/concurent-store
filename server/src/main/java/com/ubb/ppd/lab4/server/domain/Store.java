@@ -14,30 +14,27 @@ import java.security.SecureRandom;
 import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
  * @author Marius Adam
  */
 public class Store {
-    public static final  int                 STOCK_MAX_QUANTITY  = 100;
-    private static final String              DUMP_DATA_SEPARATOR = "================================================";
-    private static final String              DUMP_DATA_INDENT    = "        ";
-    private              Money               lifetimeProfit      = new Money("0");
-    private              ProductRepository   productRepository   = new ProductRepository();
-    private              StockItemRepository stockItemRepository = new StockItemRepository();
-    private              InvoiceRepository   invoiceRepository   = new InvoiceRepository();
-    private              OrderRepository     orderRepository     = new OrderRepository();
-    //    private LockManager         lockManager         = new LockManager();
-    private              ExecutorService     executorService     = Executors.newFixedThreadPool(
-            Runtime.getRuntime().availableProcessors()
-    );
-    private OrderProcessor orderProcessor;
+    public static final  int    STOCK_MAX_QUANTITY  = 100;
+    private static final String DUMP_DATA_SEPARATOR = "================================================";
+    private static final String DUMP_DATA_INDENT    = "        ";
 
-    private PrintWriter output;
-    private PrintWriter error;
+    private final ProductRepository   productRepository   = new ProductRepository();
+    private final StockItemRepository stockItemRepository = new StockItemRepository();
+    private final InvoiceRepository   invoiceRepository   = new InvoiceRepository();
+    private final OrderRepository     orderRepository     = new OrderRepository();
+
+    private final OrderProcessor orderProcessor;
+    private final PrintWriter    output;
+    private final PrintWriter    error;
+
+    private Money lifetimeProfit = new Money("0");
+
 
     public Store(OutputStream outputStream, int numberOfProducts) {
         this(outputStream, outputStream, numberOfProducts);
@@ -46,7 +43,7 @@ public class Store {
     public Store(OutputStream outputStream, OutputStream errorStream, int numberOfProducts) {
         this.output = new PrintWriter(outputStream);
         this.error = new PrintWriter(errorStream);
-        orderProcessor = new OrderProcessor(
+        this.orderProcessor = new OrderProcessor(
                 productRepository,
                 orderRepository,
                 invoiceRepository,
@@ -55,7 +52,7 @@ public class Store {
         create(numberOfProducts);
     }
 
-    public void create(int numberOfProducts) {
+    private void create(int numberOfProducts) {
         Faker faker = new Faker(new SecureRandom());
 
         for (int i = 0; i < numberOfProducts; i++) {
@@ -85,6 +82,10 @@ public class Store {
     public void dump(OutputStream outputStream) {
         dump(new PrintWriter(outputStream));
 
+    }
+
+    public void dump() {
+        dump(output);
     }
 
     public void dump(PrintWriter writer) {
@@ -169,5 +170,9 @@ public class Store {
 
     public long availableProducts() {
         return stockItemRepository.availableProductsCount();
+    }
+
+    public long totalProducts() {
+        return productRepository.count();
     }
 }

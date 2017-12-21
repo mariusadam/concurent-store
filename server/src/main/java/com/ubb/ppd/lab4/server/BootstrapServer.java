@@ -18,34 +18,31 @@ import java.util.concurrent.TimeUnit;
  */
 public class BootstrapServer {
     private static Store createStore(int productsCount, boolean logEnabled) {
-        return new Store(
-                logEnabled ? System.out : new NullOutputStream(),
-                logEnabled ? System.err : new NullOutputStream(),
-                productsCount
-        );
+        return logEnabled
+                ? new Store(System.out, System.err, productsCount)
+                : new Store(new NullOutputStream(), productsCount);
     }
 
     public static void main(String[] args) throws InterruptedException {
 
-        Store store = createStore(10, false);
+        Store store = createStore(1000, true);
         StockChecker checker = new StockChecker(store, System.out);
 
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
                 checker,
                 0,
-                5,
+                3,
                 TimeUnit.SECONDS
         );
 
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
-                () -> store.dump(System.out),
+                store::dump,
                 0,
-                5,
+                15,
                 TimeUnit.SECONDS
         );
 
         List<String> codes = new ArrayList<>(store.getAllProductCodes());
-
 
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
                 () -> {
@@ -55,7 +52,7 @@ public class BootstrapServer {
                     store.processOrder(new Order(code, quantity, System.currentTimeMillis()));
                 },
                 0,
-                100,
+                10,
                 TimeUnit.MILLISECONDS
         );
 

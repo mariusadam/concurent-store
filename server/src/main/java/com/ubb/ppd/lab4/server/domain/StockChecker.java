@@ -5,19 +5,15 @@ import com.ubb.ppd.lab4.server.util.Money;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 
 /**
  * @author Marius Adam
  */
 public class StockChecker implements Runnable {
-    private final Store             store;
-    private       PrintWriter       writer;
-    private       CheckResult       lastCheck;
-    private       List<CheckResult> checkResultList;
+    private final Store       store;
+    private       PrintWriter writer;
+    private       CheckResult lastCheck;
 
     public StockChecker(Store store, OutputStream output) {
         this.store = store;
@@ -26,12 +22,6 @@ public class StockChecker implements Runnable {
         // perform the first check on the main thread
         // to populate the check with the initial values
         this.lastCheck = check();
-        checkResultList = Collections.synchronizedList(new ArrayList<>());
-        checkResultList.add(lastCheck);
-    }
-
-    public List<CheckResult> getCheckResultList() {
-        return checkResultList;
     }
 
     @Override
@@ -40,10 +30,10 @@ public class StockChecker implements Runnable {
 
         CheckResult currentResult = check();
         writer.println(currentResult.formatAsString(lastCheck));
+        writer.println("                \"Total products: \"" + store.totalProducts());
         writer.flush();
 
         lastCheck = currentResult;
-        checkResultList.add(lastCheck);
     }
 
     private CheckResult check() {
@@ -95,7 +85,7 @@ public class StockChecker implements Runnable {
 //                        "                \"Δ Processed orders -> %s\",\n" +
                         "                \"Total orders -> %s, %s\",\n" +
 //                        "                \"Δ Total orders -> %s\",\n" +
-                        "                \"Products available -> %s, %s\",\n";
+                        "                \"Products available -> %s, %s\"";
         //                        "                \"Δ Products available orders -> %s\",";
         private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MM-dd HH:mm:ss.SSS");
         private Date  date;
@@ -136,7 +126,7 @@ public class StockChecker implements Runnable {
                     totalOrders,
                     totalOrders - previous.totalOrders,
                     availableInStock,
-                    availableInStock - previous.availableInStock
+                    previous.availableInStock
             );
         }
     }
