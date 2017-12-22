@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  */
 public class Store {
     public static final  int    STOCK_MAX_QUANTITY  = 100;
-    private static final String DUMP_DATA_SEPARATOR = "================================================";
+    public static final  String DUMP_DATA_SEPARATOR = "================================================";
     private static final String DUMP_DATA_INDENT    = "        ";
 
     private final ProductRepository   productRepository   = new ProductRepository();
@@ -101,6 +101,11 @@ public class Store {
         Product   product   = productRepository.findByCode(order.getProductCode());
 
         logger.info("Starting the heavy work for order " + order);
+        try {
+            Thread.sleep(2 * 1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         logger.info("Finished the heavy work for order " + order);
 
         stockItem.sell(order);
@@ -108,7 +113,7 @@ public class Store {
         logger.info("Sold product, creating invoice.");
         Invoice invoice = new Invoice(product, order);
         invoiceRepository.save(invoice);
-        logger.info("Invoice " + invoice + " created.");
+        logger.info("Created invoice " + invoice);
         return invoice;
     }
 

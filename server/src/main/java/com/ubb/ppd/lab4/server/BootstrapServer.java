@@ -22,7 +22,8 @@ import java.util.logging.*;
 public class BootstrapServer {
     public static final  String  BASE_DIR               = "/home/marius/IdeaProjects/ppd-lab4-owned/";
     public static final  String  LOG_FILE               = BASE_DIR + "store.log";
-    public static final  String  STORE_FILE             = BASE_DIR + "store.txt.log";
+    public static final  String  STORE_CHECK_FILE       = BASE_DIR + "store.check.log";
+    public static final  String  STORE_DUMP_FILE        = BASE_DIR + "store.dump.log";
     public static final  int     PRODUCT_CODES_PORT     = 4545;
     public static final  int     PROCESS_ORDER_ENDPOINT = 5454;
     public static final  boolean CONSOLE_LOG_ENABLED    = true;
@@ -31,18 +32,19 @@ public class BootstrapServer {
 
     public static void main(String[] args) throws InterruptedException, IOException {
 
-        CountDownLatch emptyStoreLatch   = new CountDownLatch(1);
-        OutputStream   storeOutputStream = new FileOutputStream(STORE_FILE);
-        Store          store             = new Store(1, logger);
-        StockChecker   checker           = new StockChecker(store, storeOutputStream, emptyStoreLatch);
-        Runnable       storeDumper       = () -> store.dump(storeOutputStream);
-        Runnable       commandPlacer     = new CommandPlacer(store, logger);
+        CountDownLatch emptyStoreLatch = new CountDownLatch(1);
+        Store          store           = new Store(1, logger);
+        OutputStream   checkStream     = new FileOutputStream(STORE_CHECK_FILE);
+        StockChecker   checker         = new StockChecker(store, checkStream, emptyStoreLatch);
+        OutputStream   dumpStream      = new FileOutputStream(STORE_DUMP_FILE);
+        Runnable       storeDumper     = () -> store.dump(dumpStream);
+        Runnable       commandPlacer   = new CommandPlacer(store, logger);
 
         ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
 
-        scheduledExecutorService.scheduleAtFixedRate(checker, 0, 5, TimeUnit.MILLISECONDS);
+        scheduledExecutorService.scheduleAtFixedRate(checker, 0, 3, TimeUnit.SECONDS);
         scheduledExecutorService.scheduleAtFixedRate(storeDumper, 0, 15, TimeUnit.SECONDS);
-        scheduledExecutorService.scheduleAtFixedRate(commandPlacer, 0, 10, TimeUnit.MILLISECONDS);
+//        scheduledExecutorService.scheduleAtFixedRate(commandPlacer, 0, 10, TimeUnit.MILLISECONDS);
 
         ExecutorService threadPool = Executors.newFixedThreadPool(2);
         List<Endpoint>  endpoints  = new ArrayList<>();
@@ -61,7 +63,8 @@ public class BootstrapServer {
             logger.severe("Exception occurred " + e.getMessage());
             logger.severe("Freeing resources and shutting down");
         } finally {
-            storeOutputStream.close();
+            dumpStream.close();
+            checkStream.close();
             endpoints.forEach(BootstrapServer::closeEndpoint);
             scheduledExecutorService.shutdown();
             threadPool.shutdown();

@@ -26,10 +26,13 @@ public class ProductCodesEndpoint extends Endpoint {
         logger.info("Starting to serve product codes.");
         store.getAllProductCodes().forEach(s -> logger.info(s));
 
-        PrintWriter        writer = new PrintWriter(clientSocket.getOutputStream());
-        Collection<String> codes  = store.getAllProductCodes();
+        try (PrintWriter writer = new PrintWriter(clientSocket.getOutputStream())) {
 
-        writer.println(Integer.toString(codes.size()));
-        codes.forEach(writer::println);
+            Collection<String> codes = store.getAllProductCodes();
+
+            writer.println(Integer.toString(Store.STOCK_MAX_QUANTITY));
+            writer.println(Integer.toString(codes.size()));
+            codes.forEach(writer::println);
+        }
     }
 }

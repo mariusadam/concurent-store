@@ -5,7 +5,7 @@ import com.ubb.ppd.lab4.server.model.Invoice;
 import com.ubb.ppd.lab4.server.model.Order;
 
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.PrintStream;
 import java.net.Socket;
 import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
@@ -37,28 +37,33 @@ public class ProcessOrderEndpoint extends Endpoint {
 
     @Override
     protected void serve(Socket clientSocket) throws IOException {
-        PrintWriter writer = new PrintWriter(clientSocket.getOutputStream());
+        try (PrintStream printStream = new PrintStream(clientSocket.getOutputStream());
+             Scanner scanner = new Scanner(clientSocket.getInputStream());) {
+            doServe(scanner, printStream);
+        }
+    }
+
+    private void doServe(Scanner scanner, PrintStream printStream) {
+        Order order = null;
         try {
-            Scanner scanner     = new Scanner(clientSocket.getInputStream());
+
             String  productCode = scanner.nextLine();
             Integer quantity    = Integer.parseInt(scanner.nextLine());
-            Order   order       = new Order(productCode, quantity, System.currentTimeMillis());
 
+            order = new Order(productCode, quantity, System.currentTimeMillis());
             logger.info("Placed order: " + order);
+            printStream.println("Received order " + order);
 
-            CompletableFuture
-                    .supplyAsync(() -> store.processOrder(order), ordersExecutor)
-                    .thenAccept((i) -> {
-                        onOrderProcessed(i);
-                        writer.println("Order processed, created bill " + i);
-                    })
-                    .handle((aVoid, throwable) -> {
-                        this.onOrderError(order, throwable);
-                        return null;
-                    });
+            Invoice invoice = store.processOrder(order);
+            onOrderProcessed(invoice);
+
+            printStream.println("Order processed, created invoice " + invoice);
         } catch (Exception e) {
-            logger.severe(e.getMessage());
-            writer.println(e.getMessage());
+            if (order != null) {
+                onOrderError(order, e);
+            }
+
+            printStream.println("Error: " + e.getMessage());
         }
     }
 
@@ -80,6 +85,6 @@ public class ProcessOrderEndpoint extends Endpoint {
     private void onOrderError(Order order, Throwable t) {
         order.cancel();
         logger.severe("Canceled order " + order);
-        logger.severe(t.getMessage());
+        logger.severe(String.format("[%s] %s", t.getClass().getName(), t.getMessage()));
     }
 }

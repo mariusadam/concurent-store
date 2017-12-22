@@ -29,11 +29,14 @@ public class StockChecker implements Runnable {
 
     @Override
     public synchronized void run() {
-        writer.println("Health check starting.... : " + new Date());
+        writer.println("Health check starting.... : ");
 
         CheckResult currentResult = check();
         writer.println(currentResult.formatAsString(lastCheck));
-        writer.println("                \"Total products: \"" + store.totalProducts());
+        writer.println("\"Total products: \"" + store.totalProducts());
+        writer.println(Store.DUMP_DATA_SEPARATOR
+
+        );
         writer.flush();
 
         if (currentResult.availableInStock < 1) {
@@ -77,23 +80,23 @@ public class StockChecker implements Runnable {
         };
 
         public static final  String           FORMAT      =
-                "                \"Criteria -> Current, ΔCriteria,\",\n" +
-                        "                \"Date -> %s, %s,\",\n" +
-//                        "                \"Last date -> %s\",\n" +
-                        "                \"Profit -> %s, %s\",\n" +
-//                        "                \"Δ Profit -> %s\",\n" +
-                        "                \"Sold products -> %s, %s\",\n" +
-//                        "                \"Δ Sold products -> %s\",\n" +
-                        "                \"Created orders -> %s, %s\",\n" +
-//                        "                \"Δ Created orders -> %s\",\n" +
-                        "                \"Canceled orders -> %s, %s\",\n" +
-//                        "                \"Δ Canceled orders -> %s\",\n" +
-                        "                \"Processed orders -> %s, %s\",\n" +
-//                        "                \"Δ Processed orders -> %s\",\n" +
-                        "                \"Total orders -> %s, %s\",\n" +
-//                        "                \"Δ Total orders -> %s\",\n" +
-                        "                \"Products available -> %s, %s\"";
-        //                        "                \"Δ Products available orders -> %s\",";
+                "\"Criteria -> Current, ΔCriteria,\",\n" +
+                        "\"Date -> %s, %s,\",\n" +
+//                        "\"Last date -> %s\",\n" +
+                        "\"Profit -> %s, %s\",\n" +
+//                        "\"Δ Profit -> %s\",\n" +
+                        "\"Sold products -> %s, %s\",\n" +
+//                        "\"Δ Sold products -> %s\",\n" +
+                        "\"Created orders -> %s, %s\",\n" +
+//                        "\"Δ Created orders -> %s\",\n" +
+                        "\"Canceled orders -> %s, %s\",\n" +
+//                        "\"Δ Canceled orders -> %s\",\n" +
+                        "\"Processed orders -> %s, %s\",\n" +
+//                        "\"Δ Processed orders -> %s\",\n" +
+                        "\"Total orders -> %s, %s\",\n" +
+//                        "\"Δ Total orders -> %s\",\n" +
+                        "\"Products available -> %s, %s\"";
+        //                        "\"Δ Products available orders -> %s\",";
         private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MM-dd HH:mm:ss.SSS");
         private Date  date;
         private Money profit;
@@ -118,8 +121,8 @@ public class StockChecker implements Runnable {
         public String formatAsString(CheckResult previous) {
             return String.format(
                     FORMAT,
-                    DATE_FORMAT.format(date),
-                    DATE_FORMAT.format(previous.date),
+                    date,
+                    previous.date,
                     profit,
                     profit.minus(previous.profit),
                     soldProducts,
