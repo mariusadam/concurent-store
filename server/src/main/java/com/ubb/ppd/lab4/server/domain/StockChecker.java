@@ -62,41 +62,25 @@ public class StockChecker implements Runnable {
     private static class CheckResult {
         public static final Object[] TABLE_HEADER = new String[]{
                 "Date",
-                "Last date",
                 "Profit",
-                "Δ Profit",
                 "Sold products",
-                "Δ Sold products",
                 "Created orders",
-                "Δ Created orders",
                 "Canceled orders",
-                "Δ Canceled orders",
                 "Processed orders",
-                "Δ Processed orders",
                 "Total orders",
-                "Δ Total orders",
                 "Products available orders",
-                "Δ Products available orders",
         };
 
         public static final  String           FORMAT      =
-                "\"Criteria -> Current, ΔCriteria,\",\n" +
-                        "\"Date -> %s, %s,\",\n" +
-//                        "\"Last date -> %s\",\n" +
-                        "\"Profit -> %s, %s\",\n" +
-//                        "\"Δ Profit -> %s\",\n" +
-                        "\"Sold products -> %s, %s\",\n" +
-//                        "\"Δ Sold products -> %s\",\n" +
-                        "\"Created orders -> %s, %s\",\n" +
-//                        "\"Δ Created orders -> %s\",\n" +
-                        "\"Canceled orders -> %s, %s\",\n" +
-//                        "\"Δ Canceled orders -> %s\",\n" +
-                        "\"Processed orders -> %s, %s\",\n" +
-//                        "\"Δ Processed orders -> %s\",\n" +
-                        "\"Total orders -> %s, %s\",\n" +
-//                        "\"Δ Total orders -> %s\",\n" +
+                        "\"Criteria           -> Current, ΔCriteria,\",\n" +
+                        "\"Date               -> %s, %s,\",\n" +
+                        "\"Profit             -> %s, %s\",\n" +
+                        "\"Sold products      -> %s, %s\",\n" +
+                        "\"Created orders     -> %s, %s\",\n" +
+                        "\"Canceled orders    -> %s, %s\",\n" +
+                        "\"Processed orders   -> %s, %s\",\n" +
+                        "\"Total orders       -> %s, %s\",\n" +
                         "\"Products available -> %s, %s\"";
-        //                        "\"Δ Products available orders -> %s\",";
         private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MM-dd HH:mm:ss.SSS");
         private Date  date;
         private Money profit;
@@ -121,22 +105,30 @@ public class StockChecker implements Runnable {
         public String formatAsString(CheckResult previous) {
             return String.format(
                     FORMAT,
+                    TABLE_HEADER[0],
                     date,
                     previous.date,
+                    TABLE_HEADER[1],
                     profit,
                     profit.minus(previous.profit),
+                    TABLE_HEADER[2],
                     soldProducts,
                     soldProducts - previous.soldProducts,
+                    TABLE_HEADER[3],
                     createdOrders,
                     createdOrders - previous.createdOrders,
+                    TABLE_HEADER[4],
                     canceledOrders,
                     canceledOrders - previous.canceledOrders,
+                    TABLE_HEADER[5],
                     processedOrders,
                     processedOrders - previous.processedOrders,
+                    TABLE_HEADER[6],
                     totalOrders,
                     totalOrders - previous.totalOrders,
+                    TABLE_HEADER[7],
                     availableInStock,
-                    previous.availableInStock
+                    previous.availableInStock - availableInStock
             );
         }
     }

@@ -43,7 +43,7 @@ public class BootstrapServer {
 
         scheduledExecutorService.scheduleAtFixedRate(checker, 0, 3, TimeUnit.SECONDS);
         scheduledExecutorService.scheduleAtFixedRate(storeDumper, 0, 15, TimeUnit.SECONDS);
-//        scheduledExecutorService.scheduleAtFixedRate(commandPlacer, 0, 10, TimeUnit.MILLISECONDS);
+        scheduledExecutorService.scheduleAtFixedRate(commandPlacer, 0, 10, TimeUnit.MILLISECONDS);
 
         ExecutorService threadPool = Executors.newFixedThreadPool(5);
         List<EndpointInterface> endpoints = new ArrayList<>();
