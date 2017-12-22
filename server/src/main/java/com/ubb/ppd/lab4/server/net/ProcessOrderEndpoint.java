@@ -18,41 +18,52 @@ import java.util.logging.Logger;
  * @author Marius Adam
  */
 public class ProcessOrderEndpoint extends AbstractEndpoint {
+    public static final int DEFAULT_ACCEPTING_THREADS_COUNT = 10;
     private final Store           store;
-    private       Logger          logger;
-    private       ExecutorService computationExecutor;
+    private final Logger          logger;
+    private final ExecutorService computationExecutor;
+    private final ExecutorService serverExecutor;
 
     public ProcessOrderEndpoint(int port, Store store, Logger logger) throws IOException {
-        this(port, Runtime.getRuntime().availableProcessors(), store, logger);
+        this(port, DEFAULT_ACCEPTING_THREADS_COUNT, store, logger);
     }
 
     ProcessOrderEndpoint(int port, int threadsCount, Store store, Logger logger) throws IOException {
         super(port, logger);
         this.logger = logger;
         this.store = store;
-        this.computationExecutor = Executors.newSingleThreadExecutor();
+        computationExecutor = Executors.newSingleThreadExecutor();
+        serverExecutor = Executors.newFixedThreadPool(threadsCount);
     }
 
     @Override
     protected void serve(Socket clientSocket) throws IOException {
-        try (PrintStream printStream = new PrintStream(clientSocket.getOutputStream());
-             Scanner scanner = new Scanner(clientSocket.getInputStream());) {
-            doServe(scanner, printStream);
-        }
+        CompletableFuture
+                .supplyAsync(() -> {
+                    try (PrintStream printStream = new PrintStream(clientSocket.getOutputStream());
+                         Scanner scanner = new Scanner(clientSocket.getInputStream())) {
+                        doServe(scanner, printStream);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                }, serverExecutor)
+                .thenAccept(aVoid -> logger.info("Actually finished serving client " + clientSocket.getInetAddress()));
     }
 
     @Override
     public void close() throws IOException {
         super.close();
         computationExecutor.shutdown();
+        serverExecutor.shutdown();
     }
 
     private void doServe(Scanner scanner, PrintStream printStream) {
         Order order = null;
         try {
 
-            String  productCode = scanner.nextLine();
-            Integer quantity    = Integer.parseInt(scanner.nextLine());
+            String productCode = scanner.nextLine();
+            Integer quantity = Integer.parseInt(scanner.nextLine());
 
             order = new Order(productCode, quantity, System.currentTimeMillis());
             logger.info("Placed order: " + order);
@@ -83,7 +94,8 @@ public class ProcessOrderEndpoint extends AbstractEndpoint {
                 .handle((aVoid, throwable) -> {
                     logger.severe(throwable.getMessage());
                     return null;
-                });
+                })
+                .thenAccept(aVoid -> logger.info("Updated profit " + store.getLifetimeProfit()));
     }
 
     private void onOrderError(Order order, Throwable t) {
