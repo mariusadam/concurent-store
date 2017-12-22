@@ -1,25 +1,27 @@
 package com.ubb.ppd.lab4.client;
 
 import com.ubb.ppd.lab4.client.net.NotificationClient;
+import com.ubb.ppd.lab4.client.net.ProcessOrderClient;
 import com.ubb.ppd.lab4.client.net.ProductCodesClient;
 
 import java.net.Socket;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * @author Marius Adam
  */
 public class BootstrapClient {
-    private static final String  SERVER_HOST        = "localhost";
-    private static final Integer PRODUCT_CODES_PORT = 4545;
-    private static final Integer PROCESS_ORDER_PORT = 5454;
-    private static final Integer NOTIFICATION_PORT  = 5555;
-    private static final String  CLIENT_USAGE       = "Usage: java -jar /path/to/jar <number-of-orders>";
-    private static final int     THREADS_COUNT      = 5;
+    public static final String  SERVER_HOST        = "localhost";
+    public static final Integer PRODUCT_CODES_PORT = 4545;
+    public static final Integer PROCESS_ORDER_PORT = 5454;
+    public static final Integer NOTIFICATION_PORT  = 5555;
+    public static final String  CLIENT_USAGE       = "Usage: java -jar /path/to/jar <number-of-orders>";
+    public static final int     THREADS_COUNT      = 5;
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         ProductCodesClient productCodesClient = new ProductCodesClient(
                 () -> new Socket(SERVER_HOST, PRODUCT_CODES_PORT)
         );
@@ -36,9 +38,19 @@ public class BootstrapClient {
 
         System.out.println(productCodesClient.execute());
 
-//        ProcessOrderClient processOrderClient = new ProcessOrderClient(
-//                () -> new Socket(SERVER_HOST, PROCESS_ORDER_PORT)
-//        );
+        ProcessOrderClient processOrderClient = new ProcessOrderClient(
+                () -> new Socket(SERVER_HOST, PROCESS_ORDER_PORT)
+        );
+
+        CountDownLatch finishedRequests = new CountDownLatch(1);
+
+        System.out.println(
+                processOrderClient.execute(new ProcessOrderClient.Request(
+                    "B000IAPR0U", 2
+                ))
+        );
+
+        finishedRequests.await();
 //        ProductCodesClient.Response codesResponse = productCodesClient.execute();
 //
 //        ExecutorService threadPool = Executors.newFixedThreadPool(THREADS_COUNT);
@@ -50,7 +62,6 @@ public class BootstrapClient {
 //            }
 //
 //
-//            CountDownLatch finishedRequests = new CountDownLatch(ordersCount);
 //            for (int i = 0; i < ordersCount; ++i) {
 //                threadPool.submit(() -> {
 //                    finishedRequests.countDown();

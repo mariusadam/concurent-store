@@ -32,7 +32,7 @@ public class ProcessOrderClient {
         }
     }
 
-    static class Response {
+    public static class Response {
         private String[] messages;
 
         Response(String... messages) {

@@ -35,7 +35,7 @@ public class BootstrapServer {
     public static void main(String[] args) throws InterruptedException, IOException {
 
         CountDownLatch emptyStoreLatch = new CountDownLatch(1);
-        Store          store           = new Store(20, logger);
+        Store          store           = new Store(100000, logger);
         OutputStream   checkStream     = new FileOutputStream(STORE_CHECK_FILE);
         StockChecker   checker         = new StockChecker(store, checkStream, emptyStoreLatch);
         OutputStream   dumpStream      = new FileOutputStream(STORE_DUMP_FILE);
@@ -48,13 +48,14 @@ public class BootstrapServer {
         scheduledExecutorService.scheduleAtFixedRate(storeDumper, 0, 15, TimeUnit.SECONDS);
 //        scheduledExecutorService.scheduleAtFixedRate(commandPlacer, 0, 10, TimeUnit.MILLISECONDS);
 
-        ExecutorService threadPool = Executors.newFixedThreadPool(2);
-        List<Endpoint>  endpoints  = new ArrayList<>();
+        ExecutorService threadPool = Executors.newFixedThreadPool(5);
+        List<Endpoint> endpoints = new ArrayList<>();
         try {
             logger.info("Creating endpoints");
             endpoints.add(new ProductCodesEndpoint(PRODUCT_CODES_PORT, store, logger));
             endpoints.add(new ProcessOrderEndpoint(PROCESS_ORDER_ENDPOINT, store, logger));
             endpoints.add(new NotificationEndpoint(NOTIFICATION_ENDPOINT, store, logger));
+
 
             logger.info("Starting endpoints");
             endpoints.forEach(endpoint -> threadPool.submit(endpoint::start));

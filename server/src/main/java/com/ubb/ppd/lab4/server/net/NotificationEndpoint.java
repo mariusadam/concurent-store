@@ -41,6 +41,7 @@ public class NotificationEndpoint extends Endpoint implements Observer {
 
     @Override
     public void update(Observable o, Object arg) {
+        logger.info("Starting to notify " + connectedClients.size() + " connected clients");
         // do not block the main thread
         notificationExecutor.submit(() -> connectedClients.forEach(socket -> {
             try {
@@ -48,6 +49,7 @@ public class NotificationEndpoint extends Endpoint implements Observer {
                 socket.getOutputStream().write(1);
             } catch (IOException e) {
                 logger.severe(e.getMessage());
+                e.printStackTrace();
             }
         }));
     }

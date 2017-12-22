@@ -26,8 +26,6 @@ public class ProductCodesEndpoint extends Endpoint {
     @Override
     protected void serve(Socket clientSocket) throws IOException {
         logger.info("Starting to serve product codes.");
-        store.getAllProductCodes().forEach(s -> logger.info(s));
-
         try (PrintWriter writer = new PrintWriter(clientSocket.getOutputStream())) {
 
             Collection<StockItem> items = store.getAvailableStockItems();

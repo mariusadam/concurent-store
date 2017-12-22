@@ -99,14 +99,16 @@ public class Store extends Observable {
         Product   product   = productRepository.findByCode(order.getProductCode());
 
         logger.info("Starting the heavy work for order " + order);
-        try {
-            Thread.sleep(2 * 1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            Thread.sleep(900);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
         logger.info("Finished the heavy work for order " + order);
 
         stockItem.sell(order);
+
+        logger.info("Notifying observers");
         notifyObservers();
         logger.info("Sold product, creating invoice.");
         Invoice invoice = new Invoice(product, order);

@@ -29,10 +29,13 @@ public class NotificationClient extends Observable implements AutoCloseable {
         executorService.submit(() -> {
             while (!socket.isClosed()) {
                 try {
+                    System.out.println("Waiting for events");
                     int b = socket.getInputStream().read();
+                    System.out.println("Event received, notifying obs");
                     notifyObservers(new Event(b));
                 } catch (IOException e) {
                     System.err.println(e.getMessage());
+                    e.printStackTrace();
                 }
             }
         });
