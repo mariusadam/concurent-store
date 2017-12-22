@@ -105,28 +105,20 @@ public class StockChecker implements Runnable {
         public String formatAsString(CheckResult previous) {
             return String.format(
                     FORMAT,
-                    TABLE_HEADER[0],
                     date,
                     previous.date,
-                    TABLE_HEADER[1],
                     profit,
                     profit.minus(previous.profit),
-                    TABLE_HEADER[2],
                     soldProducts,
                     soldProducts - previous.soldProducts,
-                    TABLE_HEADER[3],
                     createdOrders,
                     createdOrders - previous.createdOrders,
-                    TABLE_HEADER[4],
                     canceledOrders,
                     canceledOrders - previous.canceledOrders,
-                    TABLE_HEADER[5],
                     processedOrders,
                     processedOrders - previous.processedOrders,
-                    TABLE_HEADER[6],
                     totalOrders,
                     totalOrders - previous.totalOrders,
-                    TABLE_HEADER[7],
                     availableInStock,
                     previous.availableInStock - availableInStock
             );
