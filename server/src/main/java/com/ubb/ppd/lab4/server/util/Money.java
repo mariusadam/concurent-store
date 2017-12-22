@@ -294,7 +294,7 @@ public final class Money implements Comparable<Money>, Serializable {
      * <tt>Money</tt>.
      */
     public Money times(int aFactor) {
-        BigDecimal factor = new BigDecimal(aFactor);
+        BigDecimal factor    = new BigDecimal(aFactor);
         BigDecimal newAmount = fAmount.multiply(factor);
         return new Money(newAmount, fCurrency, fRounding);
     }
@@ -320,7 +320,7 @@ public final class Money implements Comparable<Money>, Serializable {
      * 'this' <tt>Money</tt>.
      */
     public Money div(int aDivisor) {
-        BigDecimal divisor = new BigDecimal(aDivisor);
+        BigDecimal divisor   = new BigDecimal(aDivisor);
         BigDecimal newAmount = fAmount.divide(divisor, fRounding);
         return new Money(newAmount, fCurrency, fRounding);
     }

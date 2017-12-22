@@ -12,6 +12,7 @@ public class Order implements Identifiable<Long>, Serializable {
     private int    quantity;
     private Date   date;
     private Status status;
+
     public Order(String productCode, int quantity, long milli) {
         this(productCode, quantity, new Date(milli));
     }

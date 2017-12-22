@@ -6,18 +6,21 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * @author Marius Adam
  */
 public class StockChecker implements Runnable {
-    private final Store       store;
-    private       PrintWriter writer;
-    private       CheckResult lastCheck;
+    private final Store          store;
+    private       PrintWriter    writer;
+    private       CheckResult    lastCheck;
+    private       CountDownLatch emptyStoreLatch;
 
-    public StockChecker(Store store, OutputStream output) {
+    public StockChecker(Store store, OutputStream output, CountDownLatch emptyStoreLatch) {
         this.store = store;
         this.writer = new PrintWriter(output);
+        this.emptyStoreLatch = emptyStoreLatch;
 
         // perform the first check on the main thread
         // to populate the check with the initial values
@@ -26,12 +29,16 @@ public class StockChecker implements Runnable {
 
     @Override
     public synchronized void run() {
-        writer.println(CheckResult.DATE_FORMAT.format(new Date()) + " Health check starting....");
+        writer.println("Health check starting.... : " + new Date());
 
         CheckResult currentResult = check();
         writer.println(currentResult.formatAsString(lastCheck));
         writer.println("                \"Total products: \"" + store.totalProducts());
         writer.flush();
+
+        if (currentResult.availableInStock < 1) {
+            emptyStoreLatch.countDown();
+        }
 
         lastCheck = currentResult;
     }

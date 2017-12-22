@@ -13,7 +13,8 @@ import java.io.PrintWriter;
 import java.security.SecureRandom;
 import java.util.Collection;
 import java.util.Date;
-import java.util.concurrent.CompletableFuture;
+import java.util.Optional;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -28,31 +29,17 @@ public class Store {
     private final StockItemRepository stockItemRepository = new StockItemRepository();
     private final InvoiceRepository   invoiceRepository   = new InvoiceRepository();
     private final OrderRepository     orderRepository     = new OrderRepository();
-
-    private final OrderProcessor orderProcessor;
-    private final PrintWriter    output;
-    private final PrintWriter    error;
+    private Logger logger;
 
     private Money lifetimeProfit = new Money("0");
 
-
-    public Store(OutputStream outputStream, int numberOfProducts) {
-        this(outputStream, outputStream, numberOfProducts);
-    }
-
-    public Store(OutputStream outputStream, OutputStream errorStream, int numberOfProducts) {
-        this.output = new PrintWriter(outputStream);
-        this.error = new PrintWriter(errorStream);
-        this.orderProcessor = new OrderProcessor(
-                productRepository,
-                orderRepository,
-                invoiceRepository,
-                stockItemRepository
-        );
+    public Store(int numberOfProducts, Logger logger) {
+        this.logger = logger;
         create(numberOfProducts);
     }
 
     private void create(int numberOfProducts) {
+        logger.info("Creating " + numberOfProducts + " products with random data.");
         Faker faker = new Faker(new SecureRandom());
 
         for (int i = 0; i < numberOfProducts; i++) {
@@ -68,6 +55,7 @@ public class Store {
                     faker.number().numberBetween(0, STOCK_MAX_QUANTITY)
             ));
         }
+        logger.info("Done creating the products and stock items.");
     }
 
     public Money getLifetimeProfit() {
@@ -84,22 +72,19 @@ public class Store {
 
     }
 
-    public void dump() {
-        dump(output);
-    }
-
     public void dump(PrintWriter writer) {
+        writer.println("Date: " + new Date());
         writeItems(writer, "Products", productRepository);
         writeItems(writer, "Stock items", stockItemRepository);
         writeItems(writer, "Orders", orderRepository);
         writeItems(writer, "Bills", invoiceRepository);
+        writer.println(DUMP_DATA_SEPARATOR);
+        writer.flush();
     }
 
     private void writeItems(PrintWriter writer, String header, AbstractRepository<?, ?> items) {
         writer.println(header + ":");
         items.findAll().forEach(o -> writer.println(DUMP_DATA_INDENT + o));
-        writer.println(DUMP_DATA_SEPARATOR);
-        writer.flush();
     }
 
     public Collection<String> getAllProductCodes() {
@@ -110,42 +95,30 @@ public class Store {
                 .collect(Collectors.toList());
     }
 
-    public void processOrder(Order order) {
-        info("Placed order " + order);
+    public Invoice processOrder(Order order) {
+        orderRepository.save(order);
+        StockItem stockItem = stockItemRepository.findByProductCode(order.getProductCode());
+        Product   product   = productRepository.findByCode(order.getProductCode());
 
-        CompletableFuture
-                .supplyAsync(() -> orderProcessor.process(order))
-                .thenAccept(this::onOrderProcessed)
-                .handle((aVoid, throwable) -> {
-                    this.onOrderError(order, throwable);
-                    return null;
-                });
+        logger.info("Starting the heavy work for order " + order);
+        logger.info("Finished the heavy work for order " + order);
+
+        stockItem.sell(order);
+
+        logger.info("Sold product, creating invoice.");
+        Invoice invoice = new Invoice(product, order);
+        invoiceRepository.save(invoice);
+        logger.info("Invoice " + invoice + " created.");
+        return invoice;
     }
 
-    private void error(String message) {
-        Date date = new Date();
-        error.println(date + " " + message);
-        error.flush();
-    }
-
-    private void onOrderProcessed(Invoice invoice) {
-        info("Created " + invoice);
-
-        // this is thread safe because Moneys are immutable
-        lifetimeProfit = lifetimeProfit.plus(invoice.getTotal());
-
-    }
-
-    private void onOrderError(Order order, Throwable t) {
-        error(t.getMessage());
-        order.cancel();
-        error("Canceled order " + order);
-    }
-
-    private void info(String s) {
-        Date date = new Date();
-        output.println((date + " " + s));
-        output.flush();
+    public Optional<Invoice> processOrderSilenceErrors(Order order) {
+        try {
+            return Optional.of(processOrder(order));
+        } catch (Exception e) {
+            logger.severe(e.getMessage());
+            return Optional.empty();
+        }
     }
 
     public long soldProducts() {
@@ -174,5 +147,9 @@ public class Store {
 
     public long totalProducts() {
         return productRepository.count();
+    }
+
+    public void addProfit(Money profit) {
+        lifetimeProfit = lifetimeProfit.plus(profit);
     }
 }
