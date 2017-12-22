@@ -3,7 +3,10 @@ package com.ubb.ppd.lab4.server.repository;
 import com.ubb.ppd.lab4.server.domain.exception.DomainException;
 import com.ubb.ppd.lab4.server.model.StockItem;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Marius Adam
@@ -21,6 +24,12 @@ public class StockItemRepository extends AbstractRepository<String, StockItem> {
         }
 
         return stockItem;
+    }
+
+    public Collection<StockItem> getAvailable() {
+        return streamAll()
+                .filter(stockItem -> stockItem.getQuantity() > 0)
+                .collect(Collectors.toList());
     }
 
     public long availableProductsCount() {

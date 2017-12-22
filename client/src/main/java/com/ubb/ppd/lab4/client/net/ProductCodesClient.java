@@ -20,41 +20,58 @@ public class ProductCodesClient {
         try (Socket socket = socketFactory.createSocket();
              Scanner scanner = new Scanner(socket.getInputStream())) {
 
-            Integer      maxQuantity = Integer.parseInt(scanner.nextLine());
-            Integer      size        = Integer.parseInt(scanner.nextLine());
-            List<String> codes       = new ArrayList<>(size);
+            Integer  size     = Integer.parseInt(scanner.nextLine());
+            Response response = new Response();
             for (int i = 0; i < size; ++i) {
-                codes.add(scanner.nextLine());
+                response.responseItems.add(new ResponseItem(
+                        scanner.nextLine(),
+                        Integer.parseInt(scanner.nextLine())
+                ));
             }
-            return new Response(codes, maxQuantity);
+            return response;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     public static class Response {
-        private List<String> productCodes;
-        private int          maxQuantity;
+        List<ResponseItem> responseItems = new ArrayList<>();
 
-        public Response(List<String> productCodes, int maxQuantity) {
-            this.productCodes = productCodes;
-            this.maxQuantity = maxQuantity;
-        }
-
-        public List<String> getProductCodes() {
-            return productCodes;
-        }
-
-        public int getMaxQuantity() {
-            return maxQuantity;
+        public List<ResponseItem> getResponseItems() {
+            return responseItems;
         }
 
         @Override
         public String toString() {
             return "Response{" +
-                    "productCodes=" + productCodes +
-                    ", maxQuantity=" + maxQuantity +
-                    '}';
+                    "responseItems=\n" + responseItems +
+                    "\n}";
+        }
+    }
+
+    public static class ResponseItem {
+        private String productCode;
+        private int    quantity;
+
+        public ResponseItem(String productCode, int quantity) {
+            this.productCode = productCode;
+            this.quantity = quantity;
+        }
+
+        @Override
+        public String toString() {
+            return "\n\tResponseItem{" +
+                    "productCode='" + productCode + '\'' +
+                    ", quantity=" + quantity +
+                    "}";
+        }
+
+        public String getProductCode() {
+            return productCode;
+        }
+
+        public int getQuantity() {
+            return quantity;
         }
     }
 }

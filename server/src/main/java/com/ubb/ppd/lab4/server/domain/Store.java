@@ -11,16 +11,14 @@ import com.ubb.ppd.lab4.server.util.Money;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.security.SecureRandom;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Optional;
+import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
  * @author Marius Adam
  */
-public class Store {
+public class Store extends Observable {
     public static final  int    STOCK_MAX_QUANTITY  = 100;
     public static final  String DUMP_DATA_SEPARATOR = "================================================";
     private static final String DUMP_DATA_INDENT    = "        ";
@@ -109,7 +107,7 @@ public class Store {
         logger.info("Finished the heavy work for order " + order);
 
         stockItem.sell(order);
-
+        notifyObservers();
         logger.info("Sold product, creating invoice.");
         Invoice invoice = new Invoice(product, order);
         invoiceRepository.save(invoice);
@@ -156,5 +154,9 @@ public class Store {
 
     public void addProfit(Money profit) {
         lifetimeProfit = lifetimeProfit.plus(profit);
+    }
+
+    public Collection<StockItem> getAvailableStockItems() {
+        return stockItemRepository.getAvailable();
     }
 }

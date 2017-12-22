@@ -4,6 +4,7 @@ import com.ubb.ppd.lab4.server.domain.CommandPlacer;
 import com.ubb.ppd.lab4.server.domain.StockChecker;
 import com.ubb.ppd.lab4.server.domain.Store;
 import com.ubb.ppd.lab4.server.net.Endpoint;
+import com.ubb.ppd.lab4.server.net.NotificationEndpoint;
 import com.ubb.ppd.lab4.server.net.ProcessOrderEndpoint;
 import com.ubb.ppd.lab4.server.net.ProductCodesEndpoint;
 import sun.applet.Main;
@@ -26,6 +27,7 @@ public class BootstrapServer {
     public static final  String  STORE_DUMP_FILE        = BASE_DIR + "store.dump.log";
     public static final  int     PRODUCT_CODES_PORT     = 4545;
     public static final  int     PROCESS_ORDER_ENDPOINT = 5454;
+    public static final  int     NOTIFICATION_ENDPOINT  = 5555;
     public static final  boolean CONSOLE_LOG_ENABLED    = true;
     public static final  boolean FILE_LOG_ENABLED       = true;
     private static final Logger  logger                 = createLogger();
@@ -33,7 +35,7 @@ public class BootstrapServer {
     public static void main(String[] args) throws InterruptedException, IOException {
 
         CountDownLatch emptyStoreLatch = new CountDownLatch(1);
-        Store          store           = new Store(1, logger);
+        Store          store           = new Store(20, logger);
         OutputStream   checkStream     = new FileOutputStream(STORE_CHECK_FILE);
         StockChecker   checker         = new StockChecker(store, checkStream, emptyStoreLatch);
         OutputStream   dumpStream      = new FileOutputStream(STORE_DUMP_FILE);
@@ -52,6 +54,7 @@ public class BootstrapServer {
             logger.info("Creating endpoints");
             endpoints.add(new ProductCodesEndpoint(PRODUCT_CODES_PORT, store, logger));
             endpoints.add(new ProcessOrderEndpoint(PROCESS_ORDER_ENDPOINT, store, logger));
+            endpoints.add(new NotificationEndpoint(NOTIFICATION_ENDPOINT, store, logger));
 
             logger.info("Starting endpoints");
             endpoints.forEach(endpoint -> threadPool.submit(endpoint::start));

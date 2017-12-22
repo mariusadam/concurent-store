@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+
+<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.ubb.ppd.lab4.client.gui.WindowController">
+   <children>
+      <Button layoutX="516.0" layoutY="18.0" mnemonicParsing="false" onAction="#onSendButton" text="Send" />
+      <TextField fx:id="ordersCountField" layoutX="312.0" layoutY="18.0" promptText="Orders count" />
+      <TextArea layoutX="312.0" layoutY="80.0" prefHeight="307.0" prefWidth="276.0" />
+      <TableView fx:id="productsTableView" layoutX="14.0" layoutY="14.0" prefHeight="373.0" prefWidth="284.0">
+        <columns>
+          <TableColumn prefWidth="163.0" text="Product code" />
+          <TableColumn prefWidth="120.0" text="Stoc" />
+        </columns>
+      </TableView>
+   </children>
+</AnchorPane>

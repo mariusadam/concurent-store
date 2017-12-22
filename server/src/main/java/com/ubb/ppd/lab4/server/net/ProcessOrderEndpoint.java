@@ -9,7 +9,7 @@ import java.io.PrintStream;
 import java.net.Socket;
 import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
@@ -18,10 +18,9 @@ import java.util.logging.Logger;
  * @author Marius Adam
  */
 public class ProcessOrderEndpoint extends Endpoint {
-    private final Store    store;
-    private final Executor ordersExecutor;
-    private       Logger   logger;
-    private       Executor computationExecutor;
+    private final Store           store;
+    private       Logger          logger;
+    private       ExecutorService computationExecutor;
 
     public ProcessOrderEndpoint(int port, Store store, Logger logger) throws IOException {
         this(port, Runtime.getRuntime().availableProcessors(), store, logger);
@@ -31,7 +30,6 @@ public class ProcessOrderEndpoint extends Endpoint {
         super(port, logger);
         this.logger = logger;
         this.store = store;
-        this.ordersExecutor = Executors.newFixedThreadPool(threadsCount);
         this.computationExecutor = Executors.newSingleThreadExecutor();
     }
 
@@ -41,6 +39,12 @@ public class ProcessOrderEndpoint extends Endpoint {
              Scanner scanner = new Scanner(clientSocket.getInputStream());) {
             doServe(scanner, printStream);
         }
+    }
+
+    @Override
+    public void close() throws IOException {
+        super.close();
+        computationExecutor.shutdown();
     }
 
     private void doServe(Scanner scanner, PrintStream printStream) {

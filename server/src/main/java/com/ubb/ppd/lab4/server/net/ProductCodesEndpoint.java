@@ -1,11 +1,13 @@
 package com.ubb.ppd.lab4.server.net;
 
 import com.ubb.ppd.lab4.server.domain.Store;
+import com.ubb.ppd.lab4.server.model.StockItem;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Collection;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 /**
@@ -28,11 +30,13 @@ public class ProductCodesEndpoint extends Endpoint {
 
         try (PrintWriter writer = new PrintWriter(clientSocket.getOutputStream())) {
 
-            Collection<String> codes = store.getAllProductCodes();
+            Collection<StockItem> items = store.getAvailableStockItems();
 
-            writer.println(Integer.toString(Store.STOCK_MAX_QUANTITY));
-            writer.println(Integer.toString(codes.size()));
-            codes.forEach(writer::println);
+            writer.println(Integer.toString(items.size()));
+            items.forEach(stockItem -> {
+                writer.println(stockItem.getProductCode());
+                writer.println(stockItem.getQuantity());
+            });
         }
     }
 }
