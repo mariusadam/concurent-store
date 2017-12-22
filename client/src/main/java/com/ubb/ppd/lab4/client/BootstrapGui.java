@@ -38,6 +38,14 @@ public class BootstrapGui extends Application {
         ProcessOrderClient processOrderClient = new ProcessOrderClient(
                 () -> new Socket(SERVER_HOST, PROCESS_ORDER_PORT)
         );
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                notificationClient.close();
+                windowController.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }));
 
         notificationClient.addObserver(windowController);
         notificationClient.addObserver(new Observer() {
@@ -46,14 +54,17 @@ public class BootstrapGui extends Application {
                 System.out.println("Received an update from server.");
             }
         });
-
+        notificationClient.addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg) {
+                System.out.println("Another observer Received an update from server.");
+            }
+        });
 
         windowController.setProductCodesClient(productCodesClient);
         windowController.setProcessOrderClient(processOrderClient);
         Scene scene = new Scene(root);
         primaryStage.setScene(scene);
         primaryStage.show();
-
-        notificationClient.close();
     }
 }

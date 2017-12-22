@@ -32,6 +32,7 @@ public class NotificationClient extends Observable implements AutoCloseable {
                     System.out.println("Waiting for events");
                     int b = socket.getInputStream().read();
                     System.out.println("Event received, notifying obs");
+                    setChanged();
                     notifyObservers(new Event(b));
                 } catch (IOException e) {
                     System.err.println(e.getMessage());

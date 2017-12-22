@@ -46,7 +46,7 @@ public class BootstrapClient {
 
         System.out.println(
                 processOrderClient.execute(new ProcessOrderClient.Request(
-                    "B000IAPR0U", 2
+                    "B0000AAGDL", 2
                 ))
         );
 

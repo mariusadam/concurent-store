@@ -9,12 +9,12 @@ import java.util.logging.Logger;
 /**
  * @author Marius Adam
  */
-public abstract class Endpoint implements Closeable, AutoCloseable {
+public abstract class AbstractEndpoint implements Closeable, AutoCloseable, EndpointInterface {
     private ServerSocket serverSock;
     private Logger       logger;
 
-    Endpoint(int port, Logger logger) throws IOException {
-        serverSock = new ServerSocket(port);
+    AbstractEndpoint(int exposedPort, Logger logger) throws IOException {
+        serverSock = new ServerSocket(exposedPort);
         this.logger = logger;
     }
 
@@ -23,6 +23,7 @@ public abstract class Endpoint implements Closeable, AutoCloseable {
         serverSock.close();
     }
 
+    @Override
     public void start() {
         logger.info(String.format(
                 "Started listening on connections on port %s",

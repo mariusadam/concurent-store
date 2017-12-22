@@ -3,6 +3,7 @@ package com.ubb.ppd.lab4.server.net;
 import com.ubb.ppd.lab4.server.domain.Store;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,28 +16,37 @@ import java.util.logging.Logger;
 /**
  * @author Marius Adam
  */
-public class NotificationEndpoint extends Endpoint implements Observer {
-    private Logger          logger;
-    private List<Socket>    connectedClients;
-    private ExecutorService notificationExecutor;
+public class NotificationEndpoint implements Observer, EndpointInterface {
+    private final Logger logger;
+    private final List<Socket>    connectedClients     = new ArrayList<>();
+    private final ExecutorService notificationExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService startExecutor = Executors.newSingleThreadExecutor();
+    private final ServerSocket serverSocket;
 
-    public NotificationEndpoint(int port, Store store, Logger logger) throws IOException {
-        super(port, logger);
+    public NotificationEndpoint(int exposedPort, Store store, Logger logger) throws IOException {
         this.logger = logger;
-        this.connectedClients = new ArrayList<>();
-        this.notificationExecutor = Executors.newSingleThreadExecutor();
+        this.serverSocket = new ServerSocket(exposedPort);
         store.addObserver(this);
     }
 
     @Override
-    protected void serve(Socket clientSocket) throws IOException {
-        connectedClients.add(clientSocket);
+    public void close() throws IOException {
+        serverSocket.close();
+        notificationExecutor.shutdown();
+        startExecutor.shutdown();
     }
 
     @Override
-    public void close() throws IOException {
-        super.close();
-        notificationExecutor.shutdown();
+    public void start() {
+        startExecutor.submit(() -> {
+            while (!serverSocket.isClosed()) {
+                try {
+                    connectedClients.add(serverSocket.accept());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     @Override

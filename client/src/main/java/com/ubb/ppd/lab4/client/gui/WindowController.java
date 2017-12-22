@@ -27,9 +27,9 @@ import static com.ubb.ppd.lab4.client.BootstrapClient.THREADS_COUNT;
 /**
  * @author Marius Adam
  */
-public class WindowController implements Observer, Initializable {
-    private final ExecutorService          wrapper                     = Executors.newFixedThreadPool(THREADS_COUNT);
-    private final ScheduledExecutorService scheduledThreadPoolExecutor = Executors.newSingleThreadScheduledExecutor();
+public class WindowController implements Observer, Initializable, AutoCloseable {
+    private final ExecutorService          updatesExecutor             = Executors.newSingleThreadExecutor();
+    private final ExecutorService          sendExecutor                = Executors.newSingleThreadExecutor();
     @FXML
     private TableColumn<ProductCodesClient.ResponseItem, Integer> stocCol;
     @FXML
@@ -49,16 +49,10 @@ public class WindowController implements Observer, Initializable {
     @FXML
     void onSendButton(ActionEvent event) {
         log("Clicked send.");
-        wrapper.submit(() -> {
+        sendExecutor.submit(() -> {
             createOrders();
             return null;
         });
-    }
-
-    @FXML
-    void hack(ActionEvent event) {
-        log("Updating the table");
-        updateTable();
     }
 
     private void createOrders() {
@@ -77,8 +71,8 @@ public class WindowController implements Observer, Initializable {
                 log("Creating order #" + i);
                 threadPool.submit(() -> {
                     finishedRequests.countDown();
-                    Random  random   = new SecureRandom();
-                    String  code     = responseItems.get(random.nextInt(responseItems.size())).getProductCode();
+                    Random random = new SecureRandom();
+                    String code = responseItems.get(random.nextInt(responseItems.size())).getProductCode();
                     Integer quantity = random.nextInt(maxQuantity);
 
                     log("Sending order for product code " + code);
@@ -115,19 +109,27 @@ public class WindowController implements Observer, Initializable {
 
     public void setProductCodesClient(ProductCodesClient productCodesClient) {
         this.productCodesClient = productCodesClient;
-        scheduledThreadPoolExecutor.scheduleAtFixedRate(this::updateTable, 0, 1, TimeUnit.SECONDS);
+        updateTable();
     }
 
     private void updateTable() {
-        ProductCodesClient.Response response = productCodesClient.execute();
+        updatesExecutor.submit(() -> {
+            ProductCodesClient.Response response = productCodesClient.execute();
 //            log("Received " + response);
-        Platform.runLater(() -> {
-            responseItems.clear();
-            responseItems.addAll(response.getResponseItems());
+            Platform.runLater(() -> {
+                responseItems.clear();
+                responseItems.addAll(response.getResponseItems());
+            });
         });
     }
 
     public void setProcessOrderClient(ProcessOrderClient processOrderClient) {
         this.processOrderClient = processOrderClient;
+    }
+
+    @Override
+    public void close() throws Exception {
+        updatesExecutor.shutdown();
+        sendExecutor.shutdown();
     }
 }

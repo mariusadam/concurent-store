@@ -19,6 +19,5 @@
         </columns>
       </TableView>
       <TextField fx:id="maxQuantityField" layoutX="594.0" layoutY="51.0" promptText="Quantity / product" />
-      <Button layoutX="886.0" layoutY="27.0" mnemonicParsing="false" onAction="#hack" text="Update" />
    </children>
 </AnchorPane>

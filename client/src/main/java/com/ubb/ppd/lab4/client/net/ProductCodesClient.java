@@ -20,7 +20,7 @@ public class ProductCodesClient {
         try (Socket socket = socketFactory.createSocket();
              Scanner scanner = new Scanner(socket.getInputStream())) {
 
-            Integer  size     = Integer.parseInt(scanner.nextLine());
+            Integer size = Integer.parseInt(scanner.nextLine());
             Response response = new Response();
             for (int i = 0; i < size; ++i) {
                 response.responseItems.add(new ResponseItem(

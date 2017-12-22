@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 /**
  * @author Marius Adam
  */
-public class ProcessOrderEndpoint extends Endpoint {
+public class ProcessOrderEndpoint extends AbstractEndpoint {
     private final Store           store;
     private       Logger          logger;
     private       ExecutorService computationExecutor;

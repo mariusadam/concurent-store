@@ -7,13 +7,12 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Collection;
-import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 /**
  * @author Marius Adam
  */
-public class ProductCodesEndpoint extends Endpoint {
+public class ProductCodesEndpoint extends AbstractEndpoint {
     private Store  store;
     private Logger logger;
 

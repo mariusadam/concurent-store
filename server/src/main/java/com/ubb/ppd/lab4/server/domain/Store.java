@@ -109,6 +109,7 @@ public class Store extends Observable {
         stockItem.sell(order);
 
         logger.info("Notifying observers");
+        setChanged();
         notifyObservers();
         logger.info("Sold product, creating invoice.");
         Invoice invoice = new Invoice(product, order);
