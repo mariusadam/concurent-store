@@ -1,84 +1,59 @@
 package com.ubb.ppd.lab4.server.net;
 
 import com.ubb.ppd.lab4.server.domain.Store;
+import com.ubb.ppd.lab4.server.domain.exception.DomainException;
 import com.ubb.ppd.lab4.server.model.Invoice;
 import com.ubb.ppd.lab4.server.model.Order;
 
 import java.io.IOException;
-import java.io.PrintStream;
-import java.net.Socket;
+import java.io.PrintWriter;
 import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 /**
  * @author Marius Adam
  */
-public class ProcessOrderEndpoint extends AbstractEndpoint {
-    public static final int DEFAULT_ACCEPTING_THREADS_COUNT = 10;
+public class ProcessOrderEndpoint extends RequestResponseEndpoint {
     private final Store           store;
-    private final Logger          logger;
     private final ExecutorService computationExecutor;
-    private final ExecutorService serverExecutor;
 
-    public ProcessOrderEndpoint(int port, Store store, Logger logger) throws IOException {
-        this(port, DEFAULT_ACCEPTING_THREADS_COUNT, store, logger);
-    }
-
-    ProcessOrderEndpoint(int port, int threadsCount, Store store, Logger logger) throws IOException {
-        super(port, logger);
-        this.logger = logger;
+    public ProcessOrderEndpoint(int exposedPort, Mode servingMode, Logger logger, Store store) throws IOException {
+        super(exposedPort, servingMode, logger);
         this.store = store;
-        computationExecutor = Executors.newSingleThreadExecutor();
-        serverExecutor = Executors.newFixedThreadPool(threadsCount);
-    }
-
-    @Override
-    protected void serve(Socket clientSocket) throws IOException {
-        CompletableFuture
-                .supplyAsync(() -> {
-                    try (PrintStream printStream = new PrintStream(clientSocket.getOutputStream());
-                         Scanner scanner = new Scanner(clientSocket.getInputStream())) {
-                        doServe(scanner, printStream);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    return null;
-                }, serverExecutor)
-                .thenAccept(aVoid -> logger.info("Actually finished serving client " + clientSocket.getInetAddress()));
+        this.computationExecutor = Executors.newSingleThreadExecutor();
     }
 
     @Override
     public void close() throws IOException {
         super.close();
         computationExecutor.shutdown();
-        serverExecutor.shutdown();
     }
 
-    private void doServe(Scanner scanner, PrintStream printStream) {
+    @Override
+    protected void doServe(Scanner input, PrintWriter writer) {
         Order order = null;
         try {
 
-            String productCode = scanner.nextLine();
-            Integer quantity = Integer.parseInt(scanner.nextLine());
+            String  productCode = input.nextLine();
+            Integer quantity    = Integer.parseInt(input.nextLine());
 
             order = new Order(productCode, quantity, System.currentTimeMillis());
             logger.info("Placed order: " + order);
-            printStream.println("Received order " + order);
+            writer.println("Received order " + order);
 
             Invoice invoice = store.processOrder(order);
             onOrderProcessed(invoice);
 
-            printStream.println("Order processed, created invoice " + invoice);
-        } catch (Exception e) {
+            writer.println("Order processed, created invoice " + invoice);
+        } catch (DomainException e) {
             if (order != null) {
                 onOrderError(order, e);
             }
 
-            printStream.println("Error: " + e.getMessage());
+            throw e;
         }
     }
 
@@ -86,10 +61,9 @@ public class ProcessOrderEndpoint extends AbstractEndpoint {
         logger.info("Created " + invoice);
 
         CompletableFuture
-                .supplyAsync((Supplier<Void>) () -> {
+                .runAsync(() -> {
                     // this is thread safe because Moneys are immutable
                     store.addProfit(invoice.getTotal());
-                    return null;
                 }, computationExecutor)
                 .handle((aVoid, throwable) -> {
                     logger.severe(throwable.getMessage());
@@ -100,7 +74,6 @@ public class ProcessOrderEndpoint extends AbstractEndpoint {
 
     private void onOrderError(Order order, Throwable t) {
         order.cancel();
-        logger.severe("Canceled order " + order);
-        logger.severe(String.format("[%s] %s", t.getClass().getName(), t.getMessage()));
+        logger.severe(String.format("Canceled order %s : %s", order, t.getMessage()));
     }
 }

@@ -20,12 +20,12 @@ public final class Money implements Comparable<Money>, Serializable {
     private static final int  HASH_FACTOR      = 37;
     /**
      * Determines if a deserialized file is compatible with this class.
-     * <p>
+     * <format>
      * Maintainers must change this value if and only if the new version
      * of this class is not compatible with old versions. See Sun docs
      * for <a href=http://java.sun.com/products/jdk/1.1/docs/guide
      * /serialization/spec/version.doc.html> details. </a>
-     * <p>
+     * <format>
      * Not necessary to include in first version of the class, but
      * included here as a reminder of its importance.
      */
@@ -91,7 +91,7 @@ public final class Money implements Comparable<Money>, Serializable {
 
     /**
      * Constructor taking only the money amount.
-     * <p>
+     * <format>
      * <P>The currency and rounding style both take default values.
      *
      * @param aAmount is required, can be positive or negative.
@@ -106,7 +106,7 @@ public final class Money implements Comparable<Money>, Serializable {
 
     /**
      * Constructor taking the money amount and currency.
-     * <p>
+     * <format>
      * <P>The rounding style takes a default value.
      *
      * @param aAmount   is required, can be positive or negative.
@@ -122,16 +122,16 @@ public final class Money implements Comparable<Money>, Serializable {
 
     /**
      * Set default values for currency and rounding style.
-     * <p>
+     * <format>
      * <em>Your application must call this method upon startup</em>.
      * This method should usually be called only once (upon startup).
-     * <p>
+     * <format>
      * <P>The recommended rounding style is {@link RoundingMode#HALF_EVEN}, also called
      * <em>banker's rounding</em>; this rounding style introduces the least bias.
-     * <p>
+     * <format>
      * <P>Setting these defaults allow you to use the more terse constructors of this class,
      * which are much more convenient.
-     * <p>
+     * <format>
      * <P>(In a servlet environment, each app has its own classloader. Calling this
      * method in one app will never affect the operation of a second app running in the same
      * servlet container. They are independent.)
@@ -233,7 +233,7 @@ public final class Money implements Comparable<Money>, Serializable {
 
     /**
      * Equals (insensitive to scale).
-     * <p>
+     * <format>
      * <P>Return <tt>true</tt> only if the amounts are equal.
      * Currencies must match.
      * This method is <em>not</em> synonymous with the <tt>equals</tt> method.
@@ -245,7 +245,7 @@ public final class Money implements Comparable<Money>, Serializable {
 
     /**
      * Greater than.
-     * <p>
+     * <format>
      * <P>Return <tt>true</tt> only if  'this' amount is greater than
      * 'that' amount. Currencies must match.
      */
@@ -256,7 +256,7 @@ public final class Money implements Comparable<Money>, Serializable {
 
     /**
      * Greater than or equal to.
-     * <p>
+     * <format>
      * <P>Return <tt>true</tt> only if 'this' amount is
      * greater than or equal to 'that' amount. Currencies must match.
      */
@@ -267,7 +267,7 @@ public final class Money implements Comparable<Money>, Serializable {
 
     /**
      * Less than.
-     * <p>
+     * <format>
      * <P>Return <tt>true</tt> only if 'this' amount is less than
      * 'that' amount. Currencies must match.
      */
@@ -278,7 +278,7 @@ public final class Money implements Comparable<Money>, Serializable {
 
     /**
      * Less than or equal to.
-     * <p>
+     * <format>
      * <P>Return <tt>true</tt> only if 'this' amount is less than or equal to
      * 'that' amount. Currencies must match.
      */
@@ -289,7 +289,7 @@ public final class Money implements Comparable<Money>, Serializable {
 
     /**
      * Multiply this <tt>Money</tt> by an integral factor.
-     * <p>
+     * <format>
      * The scale of the returned <tt>Money</tt> is equal to the scale of 'this'
      * <tt>Money</tt>.
      */
@@ -301,7 +301,7 @@ public final class Money implements Comparable<Money>, Serializable {
 
     /**
      * Multiply this <tt>Money</tt> by an non-integral factor (having a decimal point).
-     * <p>
+     * <format>
      * <P>The scale of the returned <tt>Money</tt> is equal to the scale of
      * 'this' <tt>Money</tt>.
      */
@@ -315,7 +315,7 @@ public final class Money implements Comparable<Money>, Serializable {
 
     /**
      * Divide this <tt>Money</tt> by an integral divisor.
-     * <p>
+     * <format>
      * <P>The scale of the returned <tt>Money</tt> is equal to the scale of
      * 'this' <tt>Money</tt>.
      */
@@ -327,7 +327,7 @@ public final class Money implements Comparable<Money>, Serializable {
 
     /**
      * Divide this <tt>Money</tt> by an non-integral divisor.
-     * <p>
+     * <format>
      * <P>The scale of the returned <tt>Money</tt> is equal to the scale of
      * 'this' <tt>Money</tt>.
      */
@@ -353,7 +353,7 @@ public final class Money implements Comparable<Money>, Serializable {
     /**
      * Returns
      * {@link #getAmount()}.getPlainString() + space + {@link #getCurrency()}.getSymbol().
-     * <p>
+     * <format>
      * <P>The return value uses the runtime's <em>default locale</em>, and will not
      * always be suitable for display to an end user.
      */
@@ -364,7 +364,7 @@ public final class Money implements Comparable<Money>, Serializable {
     /**
      * Like {@link BigDecimal#equals(java.lang.Object)}, this <tt>equals</tt> method
      * is also sensitive to scale.
-     * <p>
+     * <format>
      * For example, <tt>10</tt> is <em>not</em> equal to <tt>10.00</tt>
      * The {@link #eq(Money)} method, on the other hand, is <em>not</em>
      * sensitive to scale.
@@ -471,7 +471,7 @@ public final class Money implements Comparable<Money>, Serializable {
 
     /**
      * Thrown when a set of  <tt>Money</tt> objects do not have matching currencies.
-     * <p>
+     * <format>
      * <P>For example, adding together Euros and Dollars does not make any sense.
      */
     public static final class MismatchedCurrencyException extends RuntimeException {

@@ -20,7 +20,7 @@ public class NotificationEndpoint implements Observer, EndpointInterface {
     private final Logger logger;
     private final List<Socket>    connectedClients     = new ArrayList<>();
     private final ExecutorService notificationExecutor = Executors.newSingleThreadExecutor();
-    private final ExecutorService startExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService startExecutor        = Executors.newSingleThreadExecutor();
     private final ServerSocket serverSocket;
 
     public NotificationEndpoint(int exposedPort, Store store, Logger logger) throws IOException {
@@ -37,7 +37,7 @@ public class NotificationEndpoint implements Observer, EndpointInterface {
     }
 
     @Override
-    public void start() {
+    public void expose() {
         startExecutor.submit(() -> {
             while (!serverSocket.isClosed()) {
                 try {

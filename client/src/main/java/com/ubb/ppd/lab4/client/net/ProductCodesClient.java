@@ -1,7 +1,6 @@
 package com.ubb.ppd.lab4.client.net;
 
-import java.io.IOException;
-import java.net.Socket;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -9,29 +8,30 @@ import java.util.Scanner;
 /**
  * @author Marius Adam
  */
-public class ProductCodesClient {
-    private SocketFactory socketFactory;
-
+public class ProductCodesClient extends AbstractClient<Void, ProductCodesClient.Response> {
     public ProductCodesClient(SocketFactory socketFactory) {
-        this.socketFactory = socketFactory;
+        super(socketFactory);
     }
 
     public Response execute() {
-        try (Socket socket = socketFactory.createSocket();
-             Scanner scanner = new Scanner(socket.getInputStream())) {
+        return super.execute(null);
+    }
 
-            Integer size = Integer.parseInt(scanner.nextLine());
-            Response response = new Response();
-            for (int i = 0; i < size; ++i) {
-                response.responseItems.add(new ResponseItem(
-                        scanner.nextLine(),
-                        Integer.parseInt(scanner.nextLine())
-                ));
-            }
-            return response;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    @Override
+    protected Response doExecute(Void request, Scanner input, PrintWriter writer) {
+        System.out.println("Requesting product codes to server");
+
+        Integer size = Integer.parseInt(input.nextLine());
+        System.out.println("Size " + size);
+        Response response = new Response();
+        for (int i = 0; i < size; ++i) {
+            response.responseItems.add(new ResponseItem(
+                    input.nextLine(),
+                    Integer.parseInt(input.nextLine())
+            ));
         }
+
+        return response;
     }
 
     public static class Response {

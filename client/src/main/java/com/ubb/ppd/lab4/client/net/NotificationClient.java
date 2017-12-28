@@ -5,6 +5,7 @@ import com.ubb.ppd.lab4.client.Event;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Observable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -14,6 +15,8 @@ import java.util.concurrent.Executors;
 public class NotificationClient extends Observable implements AutoCloseable {
     private Socket socket;
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private ExecutorService notifyService   = Executors.newSingleThreadExecutor();
+    private CompletableFuture<Void> previousUpdate;
 
     public NotificationClient(SocketFactory socketFactory) {
         try {
@@ -27,16 +30,23 @@ public class NotificationClient extends Observable implements AutoCloseable {
 
     private void awaitUpdatesAsync() {
         executorService.submit(() -> {
-            while (!socket.isClosed()) {
+            while (!socket.isClosed() && socket.isConnected()) {
                 try {
                     System.out.println("Waiting for events");
                     int b = socket.getInputStream().read();
-                    System.out.println("Event received, notifying obs");
-                    setChanged();
-                    notifyObservers(new Event(b));
+                    if (previousUpdate != null && !previousUpdate.isDone()) {
+                        previousUpdate.cancel(true);
+                        System.out.println("Stopped previous update");
+                    }
+                    previousUpdate = CompletableFuture.runAsync(() -> {
+                        System.out.println("Event received, notifying obs");
+                        setChanged();
+                        notifyObservers(new Event(b));
+                    }, notifyService);
                 } catch (IOException e) {
                     System.err.println(e.getMessage());
                     e.printStackTrace();
+                    break;
                 }
             }
         });
@@ -46,5 +56,6 @@ public class NotificationClient extends Observable implements AutoCloseable {
     public void close() throws Exception {
         socket.close();
         executorService.shutdown();
+        notifyService.shutdown();
     }
 }

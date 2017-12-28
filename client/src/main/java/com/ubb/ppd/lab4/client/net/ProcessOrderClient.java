@@ -1,35 +1,26 @@
 package com.ubb.ppd.lab4.client.net;
 
-import java.io.IOException;
-import java.io.PrintStream;
-import java.net.Socket;
+import java.io.PrintWriter;
 import java.util.Scanner;
 
 /**
  * @author Marius Adam
  */
-public class ProcessOrderClient {
-    private SocketFactory socketFactory;
-
+public class ProcessOrderClient extends AbstractClient<ProcessOrderClient.Request, ProcessOrderClient.Response> {
     public ProcessOrderClient(SocketFactory socketFactory) {
-        this.socketFactory = socketFactory;
+        super(socketFactory);
     }
 
-    public Response execute(Request request) {
-        try (Socket socket = socketFactory.createSocket();
-             PrintStream printStream = new PrintStream(socket.getOutputStream());
-             Scanner scanner = new Scanner(socket.getInputStream())) {
+    @Override
+    protected Response doExecute(Request request, Scanner input, PrintWriter writer) {
+        writer.println(request.productCode);
+        writer.println(request.quantity);
+        writer.flush();
 
-            printStream.println(request.productCode);
-            printStream.println(request.quantity);
-
-            return new Response(
-                    scanner.nextLine(),
-                    scanner.nextLine()
-            );
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return new Response(
+                input.nextLine(),
+                input.nextLine()
+        );
     }
 
     public static class Response {

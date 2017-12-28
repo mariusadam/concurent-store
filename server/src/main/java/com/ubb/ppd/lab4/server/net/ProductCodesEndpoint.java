@@ -5,35 +5,34 @@ import com.ubb.ppd.lab4.server.model.StockItem;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.Socket;
 import java.util.Collection;
+import java.util.Scanner;
 import java.util.logging.Logger;
 
 /**
  * @author Marius Adam
  */
-public class ProductCodesEndpoint extends AbstractEndpoint {
-    private Store  store;
-    private Logger logger;
+public class ProductCodesEndpoint extends RequestResponseEndpoint {
+    private Store store;
 
-    public ProductCodesEndpoint(int port, Store store, Logger logger) throws IOException {
-        super(port, logger);
+    public ProductCodesEndpoint(int exposedPort, Mode servingMode, Logger logger, Store store) throws IOException {
+        super(exposedPort, servingMode, logger);
         this.store = store;
-        this.logger = logger;
     }
 
     @Override
-    protected void serve(Socket clientSocket) throws IOException {
+    protected void doServe(Scanner input, PrintWriter writer) {
         logger.info("Starting to serve product codes.");
-        try (PrintWriter writer = new PrintWriter(clientSocket.getOutputStream())) {
 
-            Collection<StockItem> items = store.getAvailableStockItems();
+        Collection<StockItem> items = store.getAvailableStockItems();
+        logger.info("Product codes : " + items);
 
-            writer.println(Integer.toString(items.size()));
-            items.forEach(stockItem -> {
-                writer.println(stockItem.getProductCode());
-                writer.println(stockItem.getQuantity());
-            });
-        }
+        writer.println(Integer.toString(items.size()));
+        items.forEach(stockItem -> {
+            writer.println(stockItem.getProductCode());
+            writer.println(stockItem.getQuantity());
+        });
+
+        logger.info("Finished serving product codes.");
     }
 }

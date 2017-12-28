@@ -4,6 +4,7 @@ import com.ubb.ppd.lab4.server.domain.CommandPlacer;
 import com.ubb.ppd.lab4.server.domain.StockChecker;
 import com.ubb.ppd.lab4.server.domain.Store;
 import com.ubb.ppd.lab4.server.net.*;
+import com.ubb.ppd.lab4.server.net.RequestResponseEndpoint.Mode;
 import sun.applet.Main;
 
 import java.io.FileOutputStream;
@@ -18,16 +19,18 @@ import java.util.logging.*;
  * @author Marius Adam
  */
 public class BootstrapServer {
-    public static final  String  BASE_DIR               = "/home/mariusadam/IdeaProjects/concurent-store/";
-    public static final  String  LOG_FILE               = BASE_DIR + "store.log";
-    public static final  String  STORE_CHECK_FILE       = BASE_DIR + "store.check.log";
-    public static final  String  STORE_DUMP_FILE        = BASE_DIR + "store.dump.log";
-    public static final  int     PRODUCT_CODES_PORT     = 4545;
-    public static final  int     PROCESS_ORDER_ENDPOINT = 5454;
-    public static final  int     NOTIFICATION_ENDPOINT  = 5555;
-    public static final  boolean CONSOLE_LOG_ENABLED    = true;
-    public static final  boolean FILE_LOG_ENABLED       = true;
-    private static final Logger  logger                 = createLogger();
+    public static final  String  BASE_DIR                   = "/home/marius/IdeaProjects/ppd-lab4-owned/";
+    public static final  String  LOG_FILE                   = BASE_DIR + "store.log";
+    public static final  String  STORE_CHECK_FILE           = BASE_DIR + "store.check.log";
+    public static final  String  STORE_DUMP_FILE            = BASE_DIR + "store.dump.log";
+    public static final  int     PRODUCT_CODES_PORT         = 4545;
+    public static final  int     PROCESS_ORDER_PORT         = 5454;
+    public static final  int     NOTIFICATIONS_PORT         = 5555;
+    public static final  boolean CONSOLE_LOG_ENABLED        = true;
+    public static final  boolean FILE_LOG_ENABLED           = true;
+    private static final Mode    servingMode                = Mode.ASYNCHRONOUS;
+    private static final Logger  logger                     = createLogger();
+    private static final boolean PLACE_COMMANDS_FROM_SERVER = false;
 
     public static void main(String[] args) throws InterruptedException, IOException {
 
@@ -43,43 +46,31 @@ public class BootstrapServer {
 
         scheduledExecutorService.scheduleAtFixedRate(checker, 0, 3, TimeUnit.SECONDS);
         scheduledExecutorService.scheduleAtFixedRate(storeDumper, 0, 15, TimeUnit.SECONDS);
-        scheduledExecutorService.scheduleAtFixedRate(commandPlacer, 0, 10, TimeUnit.MILLISECONDS);
+        if (PLACE_COMMANDS_FROM_SERVER) {
+            scheduledExecutorService.scheduleAtFixedRate(commandPlacer, 0, 10, TimeUnit.MILLISECONDS);
 
-        ExecutorService threadPool = Executors.newFixedThreadPool(5);
-        List<EndpointInterface> endpoints = new ArrayList<>();
-        try {
+        }
+        try (CompositeEndpoint endpoints = new CompositeEndpoint()) {
             logger.info("Creating endpoints");
-            endpoints.add(new ProductCodesEndpoint(PRODUCT_CODES_PORT, store, logger));
-            endpoints.add(new ProcessOrderEndpoint(PROCESS_ORDER_ENDPOINT, store, logger));
-            endpoints.add(new NotificationEndpoint(NOTIFICATION_ENDPOINT, store, logger));
+            endpoints.addEndpoint(new ProductCodesEndpoint(PRODUCT_CODES_PORT, servingMode, logger, store));
+            endpoints.addEndpoint(new ProcessOrderEndpoint(PROCESS_ORDER_PORT, servingMode, logger, store));
+            endpoints.addEndpoint(new NotificationEndpoint(NOTIFICATIONS_PORT, store, logger));
 
 
             logger.info("Starting endpoints");
-            endpoints.forEach(endpoint -> threadPool.submit(endpoint::start));
+            endpoints.expose();
 
             logger.info("Awaiting for the store to be empty...");
             emptyStoreLatch.await();
-            logger.info("Store is empty. Closing down endpoints");
+            logger.info("Store became empty. Closing down endpoints");
         } catch (Exception e) {
             logger.severe("Exception occurred " + e.getMessage());
             logger.severe("Freeing resources and shutting down");
         } finally {
             dumpStream.close();
             checkStream.close();
-            endpoints.forEach(BootstrapServer::closeEndpoint);
             scheduledExecutorService.shutdown();
-            threadPool.shutdown();
             logger.info("Endpoints closed. Exiting now...");
-        }
-    }
-
-    private static void closeEndpoint(EndpointInterface endpoint) {
-        try {
-            logger.info("Attempting to close " + endpoint.getClass().getSimpleName());
-            endpoint.close();
-            logger.info(endpoint.getClass().getSimpleName() + " closed");
-        } catch (IOException e) {
-            logger.severe(e.getMessage());
         }
     }
 

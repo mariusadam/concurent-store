@@ -72,7 +72,7 @@ public class StockChecker implements Runnable {
         };
 
         public static final  String           FORMAT      =
-                        "\"Criteria           -> Current, ΔCriteria,\",\n" +
+                "\"Criteria           -> Current, ΔCriteria,\",\n" +
                         "\"Date               -> %s, %s,\",\n" +
                         "\"Profit             -> %s, %s\",\n" +
                         "\"Sold products      -> %s, %s\",\n" +

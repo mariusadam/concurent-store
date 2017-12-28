@@ -5,7 +5,6 @@ import com.ubb.ppd.lab4.server.model.StockItem;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.stream.Collectors;
 
 /**

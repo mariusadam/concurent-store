@@ -20,7 +20,9 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Random;
 import java.util.ResourceBundle;
-import java.util.concurrent.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static com.ubb.ppd.lab4.client.BootstrapClient.THREADS_COUNT;
 
@@ -28,8 +30,8 @@ import static com.ubb.ppd.lab4.client.BootstrapClient.THREADS_COUNT;
  * @author Marius Adam
  */
 public class WindowController implements Observer, Initializable, AutoCloseable {
-    private final ExecutorService          updatesExecutor             = Executors.newSingleThreadExecutor();
-    private final ExecutorService          sendExecutor                = Executors.newSingleThreadExecutor();
+    private final ExecutorService updatesExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService sendExecutor    = Executors.newSingleThreadExecutor();
     @FXML
     private TableColumn<ProductCodesClient.ResponseItem, Integer> stocCol;
     @FXML
@@ -71,8 +73,8 @@ public class WindowController implements Observer, Initializable, AutoCloseable 
                 log("Creating order #" + i);
                 threadPool.submit(() -> {
                     finishedRequests.countDown();
-                    Random random = new SecureRandom();
-                    String code = responseItems.get(random.nextInt(responseItems.size())).getProductCode();
+                    Random  random   = new SecureRandom();
+                    String  code     = responseItems.get(random.nextInt(responseItems.size())).getProductCode();
                     Integer quantity = random.nextInt(maxQuantity);
 
                     log("Sending order for product code " + code);
